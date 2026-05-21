@@ -17,5 +17,5 @@ RUN uv sync --frozen --no-dev
 RUN mkdir -p uploads
 
 # 0.0.0.0 makes uvicorn listen on all interfaces inside the container,
-# not just localhost — without this the port is unreachable from outside
+# not just localhost - without this the port is unreachable from outside
 CMD ["uv", "run", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
