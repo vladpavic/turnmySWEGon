@@ -38,7 +38,7 @@ async def create_post(
     if not text and not images:
         raise HTTPException(
             status_code=422,
-            detail="A post must have at least some text or one image.",
+            detail="Post must have at least some text or one image.",
         )
 
     post = Post(username=username, text=text)
