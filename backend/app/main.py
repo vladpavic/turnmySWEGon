@@ -8,7 +8,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session, select
 
-
 from app.config import settings
 from app.database import create_db_and_tables, get_session
 from app.models import Post, PostImage, PostRead
