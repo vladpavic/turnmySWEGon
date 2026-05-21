@@ -26,6 +26,7 @@ class Post(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     username: str = Field(index=True)
     text: str | None = None
+    hype: str | None = None  # "hype", "neutral", or "dead" — set by hype-analyzer
     created_at: datetime = Field(
         default_factory=lambda: datetime.now(UTC),
         index=True,
@@ -50,5 +51,6 @@ class PostRead(SQLModel):
     id: int
     username: str
     text: str | None
+    hype: str | None
     created_at: datetime
     images: list[PostImageRead] = []
