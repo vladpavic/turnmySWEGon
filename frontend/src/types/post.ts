@@ -1,6 +1,7 @@
 export interface PostImage {
   id: number;
   filename: string;
+  thumbnail_filename: string | null;
   order: number;
 }
 
