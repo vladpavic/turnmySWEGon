@@ -17,15 +17,25 @@ function timeAgo(dateStr: string): string {
 }
 
 const HYPE_BADGE: Record<string, { emoji: string; label: string; cls: string }> = {
-  hype: { emoji: "🔥", label: "Hype", cls: "badge-warning" },
-  neutral: { emoji: "🙂", label: "Neutral", cls: "badge-info" },
-  dead: { emoji: "💀", label: "Dead", cls: "badge-ghost" },
+  hype:    { emoji: "🔥", label: "Hype",    cls: "badge-warning" },
+  neutral: { emoji: "🙂", label: "Neutral", cls: "badge-info"    },
+  dead:    { emoji: "💀", label: "Dead",    cls: "badge-ghost"   },
 };
 
 export default function PostCard({ post, onUsernameClick }: PostCardProps) {
-  const [lightboxFilename, setLightboxFilename] = useState<string | null>(null);
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
+
   const sortedImages = [...post.images].sort((a, b) => a.order - b.order);
   const hype = post.hype ? HYPE_BADGE[post.hype] : null;
+  const hasMany = sortedImages.length > 1;
+
+  function prevImage(index: number) {
+    return (index - 1 + sortedImages.length) % sortedImages.length;
+  }
+  function nextImage(index: number) {
+    return (index + 1) % sortedImages.length;
+  }
 
   return (
     <>
@@ -61,56 +71,112 @@ export default function PostCard({ post, onUsernameClick }: PostCardProps) {
           {/* Text */}
           {post.text && <p className="text-sm leading-relaxed">{post.text}</p>}
 
-          {/* Images */}
-          {sortedImages.length > 0 && (
-            <div
-              className={`grid gap-1 rounded-lg overflow-hidden ${
-                sortedImages.length === 1 ? "grid-cols-1" : "grid-cols-2"
-              }`}
-            >
-              {sortedImages.map((img, i) => (
+          {/* Image carousel */}
+          {sortedImages.length > 0 && (() => {
+            const img = sortedImages[carouselIndex];
+            return (
+              <div className="relative rounded-lg overflow-hidden">
                 <img
-                  key={img.id}
                   src={`/uploads/${img.thumbnail_filename ?? img.filename}`}
-                  alt={`Screenshot ${i + 1}`}
-                  title={img.thumbnail_filename ? "Click to view full size" : undefined}
+                  alt={`Screenshot ${carouselIndex + 1}`}
                   className={`w-full object-cover max-h-80 ${
                     img.thumbnail_filename
                       ? "cursor-pointer hover:opacity-90 transition-opacity"
                       : ""
-                  } ${sortedImages.length === 3 && i === 0 ? "row-span-2" : ""}`}
-                  onClick={() =>
-                    img.thumbnail_filename && setLightboxFilename(img.filename)
-                  }
+                  }`}
+                  onClick={() => img.thumbnail_filename && setLightboxIndex(carouselIndex)}
                 />
-              ))}
-            </div>
-          )}
+
+                {hasMany && (
+                  <>
+                    {/* Arrows */}
+                    <button
+                      className="btn btn-circle btn-sm absolute left-2 top-1/2 -translate-y-1/2 bg-base-100/70 border-none"
+                      onClick={() => setCarouselIndex(prevImage(carouselIndex))}
+                    >
+                      ‹
+                    </button>
+                    <button
+                      className="btn btn-circle btn-sm absolute right-2 top-1/2 -translate-y-1/2 bg-base-100/70 border-none"
+                      onClick={() => setCarouselIndex(nextImage(carouselIndex))}
+                    >
+                      ›
+                    </button>
+
+                    {/* Dot indicators */}
+                    <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1">
+                      {sortedImages.map((_, i) => (
+                        <button
+                          key={i}
+                          className={`w-2 h-2 rounded-full transition-colors ${
+                            i === carouselIndex ? "bg-white" : "bg-white/40"
+                          }`}
+                          onClick={() => setCarouselIndex(i)}
+                        />
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+            );
+          })()}
         </div>
       </div>
 
       {/* Lightbox */}
-      {lightboxFilename && (
-        <dialog className="modal modal-open" onClick={() => setLightboxFilename(null)}>
-          <div
-            className="modal-box max-w-5xl p-1 bg-base-300"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <img
-              src={`/uploads/${lightboxFilename}`}
-              alt="Full size"
-              className="w-full rounded"
-            />
-            <button
-              className="btn btn-sm btn-circle absolute right-2 top-2"
-              onClick={() => setLightboxFilename(null)}
+      {lightboxIndex !== null && (() => {
+        const img = sortedImages[lightboxIndex];
+        return (
+          <dialog className="modal modal-open" onClick={() => setLightboxIndex(null)}>
+            <div
+              className="modal-box max-w-5xl p-1 bg-base-300 relative"
+              onClick={(e) => e.stopPropagation()}
             >
-              ✕
-            </button>
-          </div>
-          <div className="modal-backdrop" onClick={() => setLightboxFilename(null)} />
-        </dialog>
-      )}
+              <img
+                src={`/uploads/${img.filename}`}
+                alt="Full size"
+                className="w-full rounded"
+              />
+
+              {hasMany && (
+                <>
+                  <button
+                    className="btn btn-circle btn-sm absolute left-3 top-1/2 -translate-y-1/2 bg-base-100/70 border-none"
+                    onClick={() => setLightboxIndex(prevImage(lightboxIndex))}
+                  >
+                    ‹
+                  </button>
+                  <button
+                    className="btn btn-circle btn-sm absolute right-3 top-1/2 -translate-y-1/2 bg-base-100/70 border-none"
+                    onClick={() => setLightboxIndex(nextImage(lightboxIndex))}
+                  >
+                    ›
+                  </button>
+                  <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1">
+                    {sortedImages.map((_, i) => (
+                      <button
+                        key={i}
+                        className={`w-2 h-2 rounded-full transition-colors ${
+                          i === lightboxIndex ? "bg-white" : "bg-white/40"
+                        }`}
+                        onClick={() => setLightboxIndex(i)}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+
+              <button
+                className="btn btn-sm btn-circle absolute right-2 top-2"
+                onClick={() => setLightboxIndex(null)}
+              >
+                ✕
+              </button>
+            </div>
+            <div className="modal-backdrop" onClick={() => setLightboxIndex(null)} />
+          </dialog>
+        );
+      })()}
     </>
   );
 }
