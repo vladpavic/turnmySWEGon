@@ -31,3 +31,26 @@ uv run pytest
 uv run ruff check .
 uv run ruff format .
 ```
+
+## API Documentation
+
+With the backend running, the following are available at:
+
+- `http://localhost:8000/docs` — interactive Swagger UI
+- `http://localhost:8000/redoc` — alternative documentation UI
+- `http://localhost:8000/openapi.json` — raw OpenAPI schema
+
+## Frontend (local dev)
+
+```bash
+cd frontend
+npm install
+npm run dev  # starts dev server at localhost:5173
+```
+
+### Linting & formatting
+
+```bash
+npm run lint
+npm run format
+```

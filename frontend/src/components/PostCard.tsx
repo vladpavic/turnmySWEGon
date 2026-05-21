@@ -1,0 +1,73 @@
+import type { Post } from "../types/post";
+
+interface PostCardProps {
+  post: Post;
+  onUsernameClick: (username: string) => void;
+}
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+export default function PostCard({ post, onUsernameClick }: PostCardProps) {
+  const sortedImages = [...post.images].sort((a, b) => a.order - b.order);
+
+  return (
+    <div className="card bg-base-100 border border-base-200 shadow-sm">
+      <div className="card-body gap-3">
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <div className="avatar placeholder">
+            <div className="bg-primary text-primary-content rounded-full w-10">
+              <span className="text-lg font-bold">
+                {post.username[0].toUpperCase()}
+              </span>
+            </div>
+          </div>
+          <div>
+            <button
+              className="font-semibold hover:text-primary transition-colors"
+              onClick={() => onUsernameClick(post.username)}
+            >
+              {post.username}
+            </button>
+            <p className="text-xs text-base-content/50">{timeAgo(post.created_at)}</p>
+          </div>
+        </div>
+
+        {/* Text */}
+        {post.text && <p className="text-sm leading-relaxed">{post.text}</p>}
+
+        {/* Images */}
+        {sortedImages.length > 0 && (
+          <div
+            className={`grid gap-1 rounded-lg overflow-hidden ${
+              sortedImages.length === 1
+                ? "grid-cols-1"
+                : sortedImages.length === 2
+                  ? "grid-cols-2"
+                  : "grid-cols-2"
+            }`}
+          >
+            {sortedImages.map((img, i) => (
+              <img
+                key={img.id}
+                src={`/uploads/${img.filename}`}
+                alt={`Screenshot ${i + 1}`}
+                className={`w-full object-cover max-h-80 ${
+                  sortedImages.length === 3 && i === 0 ? "row-span-2" : ""
+                }`}
+              />
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

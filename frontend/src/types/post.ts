@@ -1,0 +1,13 @@
+export interface PostImage {
+  id: number;
+  filename: string;
+  order: number;
+}
+
+export interface Post {
+  id: number;
+  username: string;
+  text: string | null;
+  created_at: string;
+  images: PostImage[];
+}
