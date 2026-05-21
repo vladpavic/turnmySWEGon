@@ -1,0 +1,21 @@
+### SPECIFIC STUFF
+# Runtime-generated files
+backend/uploads/
+backend/campfire.db
+
+### STANDARD STUFF
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+
+# uv
+.uv/
+
+# Environment — never commit real secrets
+.env
+
+# OS
+.DS_Store
+Thumbs.db

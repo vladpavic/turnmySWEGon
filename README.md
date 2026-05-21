@@ -1,0 +1,33 @@
+# CampFire 🔥
+
+A social media platform for sharing epic gaming moments. Share your thoughts and memorable screenshots with the community.
+
+## Stack
+
+- **Backend** — Python, FastAPI, SQLModel
+- **Frontend** — React, Vite
+- **Database** — PostgreSQL (SQLite for local dev)
+- **Infrastructure** — Docker Compose, Traefik
+
+## Prerequisites
+
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/)
+- [Node.js](https://nodejs.org/) (LTS)
+- [uv](https://docs.astral.sh/uv/getting-started/installation/)
+- Git
+
+## Backend (local dev)
+
+```bash
+cd backend
+uv sync --all-groups  # installs Python and all dependencies
+uv run uvicorn app.main:app --reload  # starts dev server at localhost:8000
+```
+
+### Tests & linting
+
+```bash
+uv run pytest
+uv run ruff check .
+uv run ruff format .
+```
