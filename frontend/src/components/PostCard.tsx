@@ -51,9 +51,7 @@ export default function PostCard({ post, onUsernameClick }: PostCardProps) {
           {sortedImages.length > 0 && (
             <div
               className={`grid gap-1 rounded-lg overflow-hidden ${
-                sortedImages.length === 1
-                  ? "grid-cols-1"
-                  : "grid-cols-2"
+                sortedImages.length === 1 ? "grid-cols-1" : "grid-cols-2"
               }`}
             >
               {sortedImages.map((img, i) => (
@@ -63,9 +61,13 @@ export default function PostCard({ post, onUsernameClick }: PostCardProps) {
                   alt={`Screenshot ${i + 1}`}
                   title={img.thumbnail_filename ? "Click to view full size" : undefined}
                   className={`w-full object-cover max-h-80 ${
-                    img.thumbnail_filename ? "cursor-pointer hover:opacity-90 transition-opacity" : ""
+                    img.thumbnail_filename
+                      ? "cursor-pointer hover:opacity-90 transition-opacity"
+                      : ""
                   } ${sortedImages.length === 3 && i === 0 ? "row-span-2" : ""}`}
-                  onClick={() => img.thumbnail_filename && setLightboxFilename(img.filename)}
+                  onClick={() =>
+                    img.thumbnail_filename && setLightboxFilename(img.filename)
+                  }
                 />
               ))}
             </div>

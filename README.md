@@ -54,3 +54,9 @@ npm run dev  # starts dev server at localhost:5173
 npm run lint
 npm run format
 ```
+
+## Microservices
+
+Image-Resizer provides RabbitMQ management UI at:
+
+- `http://localhost:15672` — credentials: `guest/guest`

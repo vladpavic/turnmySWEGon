@@ -1,5 +1,5 @@
 from datetime import UTC, datetime
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -19,7 +19,7 @@ class PostImage(SQLModel, table=True):
     thumbnail_filename: str | None = None  # set by image-resizer microservice
     order: int = Field(default=0)  # position within the post's image list
 
-    post: "Post | None" = Relationship(back_populates="images")
+    post: Optional["Post"] = Relationship(back_populates="images")
 
 
 class Post(SQLModel, table=True):
