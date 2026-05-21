@@ -33,7 +33,7 @@ app.add_middleware(
 
 app.mount(
     "/uploads",
-    StaticFiles(directory=settings.upload_dir),
+    StaticFiles(directory=settings.upload_dir, check_dir=False),
     name="uploads",
 )
 
