@@ -31,3 +31,18 @@ uv run pytest
 uv run ruff check .
 uv run ruff format .
 ```
+
+## Frontend (local dev)
+
+```bash
+cd frontend
+npm install
+npm run dev  # starts dev server at localhost:5173
+```
+
+### Linting & formatting
+
+```bash
+npm run lint
+npm run format
+```

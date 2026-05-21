@@ -13,6 +13,14 @@ __pycache__/
 # uv
 .uv/
 
+# Node
+node_modules/
+dist/
+.next/
+
+# Logs
+npm-debug.log*
+
 # Environment — never commit real secrets
 .env
 

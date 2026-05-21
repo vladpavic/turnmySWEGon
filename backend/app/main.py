@@ -4,7 +4,10 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlmodel import Session, select
+
 
 from app.config import settings
 from app.database import create_db_and_tables, get_session
@@ -21,6 +24,19 @@ async def lifespan(app: FastAPI):
 
 
 app = FastAPI(title="CampFire API", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.cors_origins,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+app.mount(
+    "/uploads",
+    StaticFiles(directory=settings.upload_dir),
+    name="uploads",
+)
 
 
 ###############################################################################
@@ -58,6 +74,22 @@ async def create_post(
     session.commit()
     session.refresh(post)
     return post
+
+
+###############################################################################
+# GET /posts  — list all posts, optionally filtered by username
+###############################################################################
+
+
+@app.get("/posts", response_model=list[PostRead])
+def get_posts(
+    username: str | None = None,
+    session: Session = Depends(get_session),
+) -> list[Post]:
+    query = select(Post).order_by(Post.created_at.desc())
+    if username:
+        query = query.where(Post.username == username)
+    return list(session.exec(query).all())
 
 
 ###############################################################################
