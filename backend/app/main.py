@@ -1,8 +1,10 @@
+import json
 import shutil
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 
+import pika
 from fastapi import Depends, FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
@@ -39,6 +41,29 @@ app.mount(
 
 
 ###############################################################################
+# RabbitMQ publishing — silently skipped if RABBITMQ_URL is not configured
+###############################################################################
+
+
+def publish_resize_message(image_id: int, filename: str) -> None:
+    if not settings.rabbitmq_url:
+        return
+    try:
+        connection = pika.BlockingConnection(pika.URLParameters(settings.rabbitmq_url))
+        channel = connection.channel()
+        channel.queue_declare(queue="image.resize", durable=True)
+        channel.basic_publish(
+            exchange="",
+            routing_key="image.resize",
+            body=json.dumps({"image_id": image_id, "filename": filename}),
+            properties=pika.BasicProperties(delivery_mode=2),  # persistent
+        )
+        connection.close()
+    except Exception:
+        pass  # queue unavailable — graceful degradation, post saves normally
+
+
+###############################################################################
 # POST /posts  — create a new post
 ###############################################################################
 
@@ -68,7 +93,11 @@ async def create_post(
         with dest.open("wb") as f:
             shutil.copyfileobj(upload.file, f)
 
-        session.add(PostImage(post_id=post.id, filename=filename, order=order))
+        image = PostImage(post_id=post.id, filename=filename, order=order)
+        session.add(image)
+        session.flush()  # populate image.id before publishing
+
+        publish_resize_message(image.id, filename)
 
     session.commit()
     session.refresh(post)
@@ -104,3 +133,23 @@ def get_latest_post(session: Session = Depends(get_session)) -> Post:
         raise HTTPException(status_code=404, detail="No posts found.")
 
     return post
+
+
+###############################################################################
+# PATCH /images/{image_id}/thumbnail  — called by the image-resizer service
+###############################################################################
+
+
+@app.patch("/images/{image_id}/thumbnail")
+def set_thumbnail(
+    image_id: int,
+    thumbnail_filename: str,
+    session: Session = Depends(get_session),
+) -> dict:
+    image = session.get(PostImage, image_id)
+    if image is None:
+        raise HTTPException(status_code=404, detail="Image not found.")
+    image.thumbnail_filename = thumbnail_filename
+    session.add(image)
+    session.commit()
+    return {"ok": True}

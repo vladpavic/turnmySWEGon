@@ -14,14 +14,39 @@ services:
       timeout: 5s
       retries: 5
 
+  rabbitmq:
+    image: rabbitmq:3-management
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "15672:15672"  # management UI at http://localhost:15672 (guest/guest)
+
   backend:
     image: ghcr.io/${GHCR_OWNER}/campfire-backend:latest
     restart: unless-stopped
     environment:
       DATABASE_URL: postgresql://${POSTGRES_USER:-campfire}:${POSTGRES_PASSWORD:-campfire}@db:5432/${POSTGRES_DB:-campfire}
       UPLOAD_DIR: /app/uploads
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
     depends_on:
       db:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/app/uploads
+
+  image-resizer:
+    image: ghcr.io/${GHCR_OWNER}/campfire-image-resizer:latest
+    restart: unless-stopped
+    environment:
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      BACKEND_URL: http://backend:8000
+      UPLOAD_DIR: /app/uploads
+    depends_on:
+      rabbitmq:
         condition: service_healthy
     volumes:
       - uploads_data:/app/uploads
