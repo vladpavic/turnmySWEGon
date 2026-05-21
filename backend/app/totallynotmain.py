@@ -45,22 +45,22 @@ app.mount(
 ###############################################################################
 
 
-def publish_message(queue: str, payload: dict) -> None:
+def publish_resize_message(image_id: int, filename: str) -> None:
     if not settings.rabbitmq_url:
         return
     try:
         connection = pika.BlockingConnection(pika.URLParameters(settings.rabbitmq_url))
         channel = connection.channel()
-        channel.queue_declare(queue=queue, durable=True)
+        channel.queue_declare(queue="image.resize", durable=True)
         channel.basic_publish(
             exchange="",
-            routing_key=queue,
-            body=json.dumps(payload),
-            properties=pika.BasicProperties(delivery_mode=2),
+            routing_key="image.resize",
+            body=json.dumps({"image_id": image_id, "filename": filename}),
+            properties=pika.BasicProperties(delivery_mode=2),  # persistent
         )
         connection.close()
     except Exception:
-        pass  # queue unavailable — graceful degradation
+        pass  # queue unavailable — graceful degradation, post saves normally
 
 
 ###############################################################################
@@ -97,10 +97,7 @@ async def create_post(
         session.add(image)
         session.flush()  # populate image.id before publishing
 
-        publish_message("image.resize", {"image_id": image.id, "filename": filename})
-
-    if text:
-        publish_message("post.hype", {"post_id": post.id, "text": text})
+        publish_resize_message(image.id, filename)
 
     session.commit()
     session.refresh(post)
@@ -154,25 +151,5 @@ def set_thumbnail(
         raise HTTPException(status_code=404, detail="Image not found.")
     image.thumbnail_filename = thumbnail_filename
     session.add(image)
-    session.commit()
-    return {"ok": True}
-
-
-###############################################################################
-# PATCH /posts/{post_id}/hype  — called by hype-analyzer
-###############################################################################
-
-
-@app.patch("/posts/{post_id}/hype")
-def set_hype(
-    post_id: int,
-    label: str,
-    session: Session = Depends(get_session),
-) -> dict:
-    post = session.get(Post, post_id)
-    if post is None:
-        raise HTTPException(status_code=404, detail="Post not found.")
-    post.hype = label
-    session.add(post)
     session.commit()
     return {"ok": True}

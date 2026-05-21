@@ -16,9 +16,16 @@ function timeAgo(dateStr: string): string {
   return `${Math.floor(hrs / 24)}d ago`;
 }
 
+const HYPE_BADGE: Record<string, { emoji: string; label: string; cls: string }> = {
+  hype: { emoji: "🔥", label: "Hype", cls: "badge-warning" },
+  neutral: { emoji: "🙂", label: "Neutral", cls: "badge-info" },
+  dead: { emoji: "💀", label: "Dead", cls: "badge-ghost" },
+};
+
 export default function PostCard({ post, onUsernameClick }: PostCardProps) {
   const [lightboxFilename, setLightboxFilename] = useState<string | null>(null);
   const sortedImages = [...post.images].sort((a, b) => a.order - b.order);
+  const hype = post.hype ? HYPE_BADGE[post.hype] : null;
 
   return (
     <>
@@ -33,13 +40,20 @@ export default function PostCard({ post, onUsernameClick }: PostCardProps) {
                 </span>
               </div>
             </div>
-            <div>
-              <button
-                className="font-semibold hover:text-primary transition-colors"
-                onClick={() => onUsernameClick(post.username)}
-              >
-                {post.username}
-              </button>
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <button
+                  className="font-semibold hover:text-primary transition-colors"
+                  onClick={() => onUsernameClick(post.username)}
+                >
+                  {post.username}
+                </button>
+                {hype && (
+                  <span className={`badge badge-sm ${hype.cls}`}>
+                    {hype.emoji} {hype.label}
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-base-content/50">{timeAgo(post.created_at)}</p>
             </div>
           </div>
@@ -75,7 +89,7 @@ export default function PostCard({ post, onUsernameClick }: PostCardProps) {
         </div>
       </div>
 
-      {/* Lightbox — only shown when a thumbnail was clicked */}
+      {/* Lightbox */}
       {lightboxFilename && (
         <dialog className="modal modal-open" onClick={() => setLightboxFilename(null)}>
           <div

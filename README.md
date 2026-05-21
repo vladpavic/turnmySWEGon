@@ -57,6 +57,6 @@ npm run format
 
 ## Microservices
 
-Image-Resizer provides RabbitMQ management UI at:
+RabbitMQ management UI available at:
 
 - `http://localhost:15672` — credentials: `guest/guest`
