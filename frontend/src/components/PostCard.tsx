@@ -1,3 +1,4 @@
+import { useState } from "react";
 import type { Post } from "../types/post";
 
 interface PostCardProps {
@@ -16,58 +17,86 @@ function timeAgo(dateStr: string): string {
 }
 
 export default function PostCard({ post, onUsernameClick }: PostCardProps) {
+  const [lightboxFilename, setLightboxFilename] = useState<string | null>(null);
   const sortedImages = [...post.images].sort((a, b) => a.order - b.order);
 
   return (
-    <div className="card bg-base-100 border border-base-200 shadow-sm">
-      <div className="card-body gap-3">
-        {/* Header */}
-        <div className="flex items-center gap-3">
-          <div className="avatar placeholder">
-            <div className="bg-primary text-primary-content rounded-full w-10">
-              <span className="text-lg font-bold">
-                {post.username[0].toUpperCase()}
-              </span>
+    <>
+      <div className="card bg-base-100 border border-base-200 shadow-sm">
+        <div className="card-body gap-3">
+          {/* Header */}
+          <div className="flex items-center gap-3">
+            <div className="avatar placeholder">
+              <div className="bg-primary text-primary-content rounded-full w-10">
+                <span className="text-lg font-bold">
+                  {post.username[0].toUpperCase()}
+                </span>
+              </div>
+            </div>
+            <div>
+              <button
+                className="font-semibold hover:text-primary transition-colors"
+                onClick={() => onUsernameClick(post.username)}
+              >
+                {post.username}
+              </button>
+              <p className="text-xs text-base-content/50">{timeAgo(post.created_at)}</p>
             </div>
           </div>
-          <div>
-            <button
-              className="font-semibold hover:text-primary transition-colors"
-              onClick={() => onUsernameClick(post.username)}
+
+          {/* Text */}
+          {post.text && <p className="text-sm leading-relaxed">{post.text}</p>}
+
+          {/* Images */}
+          {sortedImages.length > 0 && (
+            <div
+              className={`grid gap-1 rounded-lg overflow-hidden ${
+                sortedImages.length === 1 ? "grid-cols-1" : "grid-cols-2"
+              }`}
             >
-              {post.username}
-            </button>
-            <p className="text-xs text-base-content/50">{timeAgo(post.created_at)}</p>
-          </div>
+              {sortedImages.map((img, i) => (
+                <img
+                  key={img.id}
+                  src={`/uploads/${img.thumbnail_filename ?? img.filename}`}
+                  alt={`Screenshot ${i + 1}`}
+                  title={img.thumbnail_filename ? "Click to view full size" : undefined}
+                  className={`w-full object-cover max-h-80 ${
+                    img.thumbnail_filename
+                      ? "cursor-pointer hover:opacity-90 transition-opacity"
+                      : ""
+                  } ${sortedImages.length === 3 && i === 0 ? "row-span-2" : ""}`}
+                  onClick={() =>
+                    img.thumbnail_filename && setLightboxFilename(img.filename)
+                  }
+                />
+              ))}
+            </div>
+          )}
         </div>
-
-        {/* Text */}
-        {post.text && <p className="text-sm leading-relaxed">{post.text}</p>}
-
-        {/* Images */}
-        {sortedImages.length > 0 && (
-          <div
-            className={`grid gap-1 rounded-lg overflow-hidden ${
-              sortedImages.length === 1
-                ? "grid-cols-1"
-                : sortedImages.length === 2
-                  ? "grid-cols-2"
-                  : "grid-cols-2"
-            }`}
-          >
-            {sortedImages.map((img, i) => (
-              <img
-                key={img.id}
-                src={`/uploads/${img.filename}`}
-                alt={`Screenshot ${i + 1}`}
-                className={`w-full object-cover max-h-80 ${
-                  sortedImages.length === 3 && i === 0 ? "row-span-2" : ""
-                }`}
-              />
-            ))}
-          </div>
-        )}
       </div>
-    </div>
+
+      {/* Lightbox — only shown when a thumbnail was clicked */}
+      {lightboxFilename && (
+        <dialog className="modal modal-open" onClick={() => setLightboxFilename(null)}>
+          <div
+            className="modal-box max-w-5xl p-1 bg-base-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <img
+              src={`/uploads/${lightboxFilename}`}
+              alt="Full size"
+              className="w-full rounded"
+            />
+            <button
+              className="btn btn-sm btn-circle absolute right-2 top-2"
+              onClick={() => setLightboxFilename(null)}
+            >
+              ✕
+            </button>
+          </div>
+          <div className="modal-backdrop" onClick={() => setLightboxFilename(null)} />
+        </dialog>
+      )}
+    </>
   );
 }

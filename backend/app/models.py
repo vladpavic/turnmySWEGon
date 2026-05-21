@@ -16,6 +16,7 @@ class PostImage(SQLModel, table=True):
     id: int | None = Field(default=None, primary_key=True)
     post_id: int = Field(foreign_key="post.id", index=True)
     filename: str  # just the filename; full path derived from config.upload_dir
+    thumbnail_filename: str | None = None  # set by image-resizer microservice
     order: int = Field(default=0)  # position within the post's image list
 
     post: Optional["Post"] = Relationship(back_populates="images")
@@ -41,6 +42,7 @@ class Post(SQLModel, table=True):
 class PostImageRead(SQLModel):
     id: int
     filename: str
+    thumbnail_filename: str | None
     order: int
 
 
